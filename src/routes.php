@@ -25,6 +25,37 @@ $app->get('/', function () use ($di, $app) {
     $app->controller->index();
 })->name('home');
 
+$app->get('/clear-all', function () use ($di, $app) {
+    $app->controller = $di['runController'];
+    $app->controller->clearAll();
+})->name('clearAll');
+
+$app->post('/clear-all', function () use ($di, $app) {
+    $app->controller = $di['runController'];
+    $app->controller->clearAll();
+});
+
+$app->get('/all-cleared', function () use ($di, $app) {
+    $app->controller = $di['runController'];
+    $app->controller->allCleared();
+})->name('allCleared');
+
+$app->get('/import', function () use ($di, $app) {
+    $app->controller = $di['runController'];
+    $app->controller->import();
+})->name('import');
+
+$app->post('/import', function () use ($di, $app) {
+    $app->controller = $di['runController'];
+    $app->controller->import();
+});
+
+$app->get('/import-all-from-cache', function () use ($di, $app) {
+    $app->controller = $di['runController'];
+    $app->controller->importAllFromCache();
+})->name('importAllFromCache');
+
+
 $app->get('/run/view', function () use ($di, $app) {
     $app->controller = $di['runController'];
     $app->controller->view();

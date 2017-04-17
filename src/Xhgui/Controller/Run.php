@@ -60,6 +60,100 @@ class Xhgui_Controller_Run extends Xhgui_Controller
         ));
     }
 
+    public function clearAll()
+    {
+        $this->_profiles->truncate();
+
+        header('Location: /all-cleared');
+        die();
+    }
+
+    public function allCleared()
+    {
+        $this->_template = 'runs/all-cleared.twig';
+        $this->set(array(
+            'title' => 'All data is cleared'
+        ));
+    }
+
+    public function import()
+    {
+        if (@$_SERVER['REQUEST_METHOD'] === 'POST'){
+            $importedFiles = [];
+            $errors = [];
+            foreach ($_FILES as $FILE) {
+                foreach ($FILE['tmp_name'] as $i => $file) {
+                    try {
+                        $fp = fopen($file, 'r');
+                        if (!$fp) {
+                            throw new RuntimeException('Can\'t open ' . $file);
+                        }
+
+                        $container = Xhgui_ServiceContainer::instance();
+                        $saver = $container['saverMongo'];
+
+
+                        while (!feof($fp)) {
+                            $line = fgets($fp);
+                            $data = json_decode($line, true);
+                            if ($data) {
+                                $saver->save($data);
+                            }
+                        }
+
+                        fclose($fp);
+                        $importedFiles[] = $FILE['name'][$i];
+                    } catch (\Exception $e){
+                        // ignore...
+                        $errors[] = $e->getTraceAsString();
+                    }
+                }
+            }
+
+            if (@$_POST['_ajax']){
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'imported' => $importedFiles, 'errors' => $errors]);
+                die;
+            }
+        }
+
+        $this->_template = 'runs/import.twig';
+        $this->set(array(
+            'importedFiles' => isset($importedFiles) ? print_r($importedFiles, true) : 'NONE',
+            'errors' => isset($errors) ? print_r($errors, true) : '',
+            'title' => 'Import xhprof data'
+        ));
+    }
+
+    public function importAllFromCache()
+    {
+        $allFiles = glob(__DIR__.'/../../../cache/*.dat');
+        foreach($allFiles as $file){
+            $fp = fopen($file, 'r');
+            if (!$fp) {
+                throw new RuntimeException('Can\'t open '.$file);
+            }
+
+            $container = Xhgui_ServiceContainer::instance();
+            $saver = $container['saverMongo'];
+
+
+            while (!feof($fp)) {
+                $line = fgets($fp);
+                $data = json_decode($line, true);
+                if ($data) {
+                    $saver->save($data);
+                }
+            }
+
+            fclose($fp);
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'files' => $allFiles]);
+        die();
+    }
+
     public function view()
     {
         $request = $this->_app->request();

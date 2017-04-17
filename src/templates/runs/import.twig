@@ -1,0 +1,124 @@
+{% extends 'layout/base.twig' %}
+{% import 'macros/helpers.twig' as helpers %}
+
+{% block title %}
+- Import xhprof data
+{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+<form id="importForm" action="" method="post" enctype="multipart/form-data">
+    <input type="file" id="files" name="file[]" multiple="multiple" />
+    <button type="submit">Import</button>
+</form>
+
+<div id="progress"></div>
+
+<div id="result">
+    {% if importedFiles != 'NONE' %}
+        <h3>Imported files:</h3>
+        <pre>{{ importedFiles }}</pre>
+    {% endif %}
+
+    {% if errors %}
+        <h3>Errors: </h3>
+        <pre>{{ errors }}</pre>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+
+
+{% block jsfoot %}
+
+<script>
+    (function () {
+        var processing = 0;
+        $('#importForm').on('submit', function(e){
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (processing > 0){
+                alert("Please don't import duplicated files!");
+                return;
+            }
+
+            var files = $('#files')[0].files;
+            updateProcessing(files.length);
+
+            var nextFileIndex = 0;
+            var importNext = function () {
+                if (nextFileIndex >= files.length){
+                    return
+                }
+
+                var file = files[nextFileIndex];
+
+                importFile(file)
+                    .then(function(res){
+                        $('#result').prepend($('<pre>').text("Imported file: " + file.name))
+                    }, function(err){
+                        $('#result').prepend($('<pre>').text("Failed to import file: " + file.name + ", error: " + err))
+                    })
+                    .always(function(){
+                        updateProcessing(processing - 1);
+                        importNext();
+                    })
+            };
+
+            importNext();
+        });
+
+        function updateProcessing(pr) {
+            processing = pr;
+
+            if (processing === 0){
+                $('#files')[0].value = '';
+                $('#progress').text('All files imported.');
+            } else {
+                $('#progress').text('Importing ' + processing + " files...");
+            }
+        }
+
+        function importFile(file){
+            return $.Deferred(function(dfd){
+                var resolve = dfd.resolve.bind(dfd);
+                var reject = dfd.reject.bind(dfd);
+
+                var formData = new FormData();
+                formData.append('_ajax', '1');
+                formData.append('file[]', file);
+
+                return $.ajax({
+                    type: 'POST',
+                    url: location.href,
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                }).then(function(res){
+                    if (typeof res === 'string'){
+                        try {
+                            res = JSON.parse(res);
+                        } catch (e) {
+                            reject('Failed to parse response: ' + e.message);
+                            return;
+                        }
+                    }
+
+                    if (res.success && res.errors && res.errors.length === 0){
+                        return resolve(res)
+                    } else {
+                        return reject(!res ? 'Unknown error' : res.message || (res.errors || ['Unknown error!'])[0])
+                    }
+                }, function(error){
+                    reject(error)
+                });
+            })
+        }
+    })();
+
+</script>
+
+{% endblock %}

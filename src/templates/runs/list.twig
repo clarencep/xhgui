@@ -14,6 +14,8 @@
         <i class="icon-search"></i> Search
     </a>
 
+    <a href="#" class="pull-right btn btn-small btn-danger" title="clear all data" onclick="confirm('Are you sure to clear all data?') && location.assign('/clear-all')">Clear</a>
+
     <form action="{{ url('home') }}" method="get" class="row hide search-form form-inline">
         <a href="#" class="search-collapse close" title="Hide search form">&times;</a>
         <div class="control-group span4">
@@ -46,6 +48,10 @@
         <a href="http://www.php.net/manual/en/ini.core.php#ini.auto-prepend-file">auto_prepend_file</a>
 		directive. This can be enabled system-wide through <code>php.ini</code>. Alternatively, you can enable
         <code>auto_prepend_file</code> per virtual host. See the README.md file for more details.
+    </p>
+    <p>
+        You can also import data: <a href="/import">click here to import data files.</a>
+        (For large files, it is suggested to use <code>php external/import.php -f &lt;data-file&gt;</code> to import.)
     </p>
 </div>
 {% endif %}
