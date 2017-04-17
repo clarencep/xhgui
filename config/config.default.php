@@ -11,7 +11,8 @@ return array(
     'save.handler' => 'file',
     'save.handler.filename' => dirname(__DIR__) . '/cache/' . 'xhgui.data.' . microtime(true) . '_' . substr(md5($url), 0, 6),
     */
-    'save.handler' => 'mongodb',
+    'save.handler' => @$_ENV['XHPROF_SAVE_HANDLER'] ?: 'mongodb',
+    'save.handler.filename' => dirname(__DIR__) . '/cache/' . 'xhgui_' . date('Ymd') . '_' . substr(md5($_SERVER['REQUEST_URI']), 0, 6) . '.dat',
 
     // Needed for file save handler. Beware of file locking. You can adujst this file path 
     // to reduce locking problems (eg uniqid, time ...)
