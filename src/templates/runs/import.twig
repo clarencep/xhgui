@@ -56,6 +56,8 @@
 
                 var file = files[nextFileIndex];
 
+                nextFileIndex++;
+
                 importFile(file)
                     .then(function(res){
                         $('#result').prepend($('<pre>').text("Imported file: " + file.name))
