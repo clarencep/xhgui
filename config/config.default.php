@@ -31,7 +31,8 @@ return array(
     // Profile 1 in 100 requests.
     // You can return true to profile every request.
     'profiler.enable' => function() {
-        return rand(1, 100) === 42;
+        return @$_COOKIE['xhprof_enable'] === date('Y-m-d');
+//        return rand(1, 100) === 42;
     },
 
     'profiler.simple_url' => function($url) {
