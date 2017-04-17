@@ -36,7 +36,7 @@ return array(
     },
 
     'profiler.simple_url' => function($url) {
-        return preg_replace('/\=\d+/', '', $url);
+        return preg_replace('/\?.*$/', '', $url);
     }
 
 );
