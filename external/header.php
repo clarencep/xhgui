@@ -65,20 +65,20 @@ if (!extension_loaded('xhprof') && !extension_loaded('uprofiler') && !extension_
 //
 // Only load the config class so we don't pollute the host application's
 // autoloaders.
-$dir = dirname(__DIR__);
-require_once $dir . '/src/Xhgui/Config.php';
-Xhgui_Config::load($dir . '/config/config.default.php');
-if (file_exists($dir . '/config/config.php')) {
-    Xhgui_Config::load($dir . '/config/config.php');
+$xhguiDir = dirname(__DIR__);
+require_once $xhguiDir . '/src/Xhgui/Config.php';
+Xhgui_Config::load($xhguiDir . '/config/config.default.php');
+if (file_exists($xhguiDir . '/config/config.php')) {
+    Xhgui_Config::load($xhguiDir . '/config/config.php');
 }
-unset($dir);
+unset($xhguiDir);
 
-if ((!extension_loaded('mongo') && !extension_loaded('mongodb')) && Xhgui_Config::read('save.handler') === 'mongodb') {
-    error_log('xhgui - extension mongo not loaded');
+if (!Xhgui_Config::shouldRun()) {
     return;
 }
 
-if (!Xhgui_Config::shouldRun()) {
+if ((!extension_loaded('mongo') && !extension_loaded('mongodb')) && Xhgui_Config::read('save.handler') === 'mongodb') {
+    error_log('xhgui - extension mongo not loaded');
     return;
 }
 
@@ -107,6 +107,7 @@ register_shutdown_function(
         } else {
             $data['profile'] = xhprof_disable();
         }
+        
 
         // ignore_user_abort(true) allows your PHP script to continue executing, even if the user has terminated their request.
         // Further Reading: http://blog.preinheimer.com/index.php?/archives/248-When-does-a-user-abort.html
@@ -115,8 +116,14 @@ register_shutdown_function(
         ignore_user_abort(true);
         flush();
 
+        // finish the request to let saving data will not affect the request
+        // Further Reading: http://www.laruence.com/2011/04/13/1991.html
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+
         if (!defined('XHGUI_ROOT_DIR')) {
-            require dirname(dirname(__FILE__)) . '/src/bootstrap.php';
+            require __DIR__ . '/../src/bootstrap.php';
         }
 
         $uri = array_key_exists('REQUEST_URI', $_SERVER)

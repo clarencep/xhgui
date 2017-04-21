@@ -11,7 +11,7 @@ return array(
     'save.handler' => 'file',
     'save.handler.filename' => dirname(__DIR__) . '/cache/' . 'xhgui.data.' . microtime(true) . '_' . substr(md5($url), 0, 6),
     */
-    'save.handler' => @$_ENV['XHPROF_SAVE_HANDLER'] ?: 'mongodb',
+    'save.handler' => 'file',
     'save.handler.filename' => dirname(__DIR__) . '/cache/' . 'xhgui_' . date('Ymd') . '_' . substr(md5($_SERVER['REQUEST_URI']), 0, 6) . '.dat',
 
     // Needed for file save handler. Beware of file locking. You can adujst this file path 
@@ -28,11 +28,16 @@ return array(
     'detail.count' => 6,
     'page.limit' => 25,
 
-    // Profile 1 in 100 requests.
     // You can return true to profile every request.
     'profiler.enable' => function() {
-        return @$_COOKIE['xhprof_enable'] === date('Y-m-d');
-//        return rand(1, 100) === 42;
+        // always profile
+        return true;
+
+        // profile only when 'xhprof_enable' in Cookie and is the date of today.
+//      return @$_COOKIE['xhprof_enable'] === date('Y-m-d');
+
+//      profile 1 of every 100 requests
+//      return rand(1, 100) === 42;
     },
 
     'profiler.simple_url' => function($url) {
